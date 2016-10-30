@@ -122,11 +122,28 @@ sample code bearing this copyright.
 #include "OneWire.h"
 
 
-OneWire::OneWire(uint8_t pin)
+OneWire::OneWire(uint8_t pin, uint8_t pullup_pin)
 {
   pinMode(pin, INPUT);
   bitmask = PIN_TO_BITMASK(pin);
   baseReg = PIN_TO_BASEREG(pin);
+
+  // Take care of pullup logic
+  if (pullup_pin != NULL) {
+    pullup_enable = true;
+
+    // Set pin mode
+    pinMode(pullup_pin, OUTPUT);
+    bitmask_pullup = PIN_TO_BITMASK(pullup_pin);
+    baseReg_pullup = PIN_TO_BASEREG(pullup_pin);
+
+    // Disable Pullup for now
+    if (pullup_inverted) {
+      DIRECT_WRITE_HIGH(baseReg_pullup, bitmask_pullup);
+    } else {
+      DIRECT_WRITE_LOW(baseReg_pullup, bitmask_pullup);
+    }
+  }
 #if ONEWIRE_SEARCH
   reset_search();
 #endif
@@ -207,6 +224,14 @@ uint8_t OneWire::read_bit(void)
   volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
   uint8_t r;
 
+  if (pullup_enable) {
+    if (pullup_inverted) {
+      DIRECT_WRITE_HIGH(baseReg_pullup, bitmask_pullup);
+    } else {
+      DIRECT_WRITE_LOW(baseReg_pullup, bitmask_pullup);
+    }
+  }
+
   noInterrupts();
   DIRECT_MODE_OUTPUT(reg, mask);
   DIRECT_WRITE_LOW(reg, mask);
@@ -236,6 +261,14 @@ void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
     noInterrupts();
     DIRECT_MODE_INPUT(baseReg, bitmask);
     DIRECT_WRITE_LOW(baseReg, bitmask);
+
+    if (pullup_enable) {
+      if (pullup_inverted) {
+        DIRECT_WRITE_LOW(baseReg_pullup, bitmask_pullup);
+      } else {
+        DIRECT_WRITE_HIGH(baseReg_pullup, bitmask_pullup);
+      }
+    }
     interrupts();
   }
 }
@@ -247,6 +280,14 @@ void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 
     noInterrupts();
     DIRECT_MODE_INPUT(baseReg, bitmask);
     DIRECT_WRITE_LOW(baseReg, bitmask);
+
+    if (pullup_enable) {
+      if (pullup_inverted) {
+        DIRECT_WRITE_LOW(baseReg_pullup, bitmask_pullup);
+      } else {
+        DIRECT_WRITE_HIGH(baseReg_pullup, bitmask_pullup);
+      }
+    }
     interrupts();
   }
 }
