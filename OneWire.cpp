@@ -124,11 +124,11 @@ sample code bearing this copyright.
 
 OneWire::OneWire(uint8_t pin)
 {
-	pinMode(pin, INPUT);
-	bitmask = PIN_TO_BITMASK(pin);
-	baseReg = PIN_TO_BASEREG(pin);
+  pinMode(pin, INPUT);
+  bitmask = PIN_TO_BITMASK(pin);
+  baseReg = PIN_TO_BASEREG(pin);
 #if ONEWIRE_SEARCH
-	reset_search();
+  reset_search();
 #endif
 }
 
@@ -141,32 +141,32 @@ OneWire::OneWire(uint8_t pin)
 //
 uint8_t OneWire::reset(void)
 {
-	IO_REG_TYPE mask = bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
-	uint8_t r;
-	uint8_t retries = 125;
+  IO_REG_TYPE mask = bitmask;
+  volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+  uint8_t r;
+  uint8_t retries = 125;
 
-	noInterrupts();
-	DIRECT_MODE_INPUT(reg, mask);
-	interrupts();
-	// wait until the wire is high... just in case
-	do {
-		if (--retries == 0) return 0;
-		delayMicroseconds(2);
-	} while ( !DIRECT_READ(reg, mask));
+  noInterrupts();
+  DIRECT_MODE_INPUT(reg, mask);
+  interrupts();
+  // wait until the wire is high... just in case
+  do {
+    if (--retries == 0) return 0;
+    delayMicroseconds(2);
+  } while ( !DIRECT_READ(reg, mask));
 
-	noInterrupts();
-	DIRECT_WRITE_LOW(reg, mask);
-	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-	interrupts();
-	delayMicroseconds(480);
-	noInterrupts();
-	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
-	delayMicroseconds(70);
-	r = !DIRECT_READ(reg, mask);
-	interrupts();
-	delayMicroseconds(410);
-	return r;
+  noInterrupts();
+  DIRECT_WRITE_LOW(reg, mask);
+  DIRECT_MODE_OUTPUT(reg, mask);  // drive output low
+  interrupts();
+  delayMicroseconds(480);
+  noInterrupts();
+  DIRECT_MODE_INPUT(reg, mask); // allow it to float
+  delayMicroseconds(70);
+  r = !DIRECT_READ(reg, mask);
+  interrupts();
+  delayMicroseconds(410);
+  return r;
 }
 
 //
@@ -175,26 +175,26 @@ uint8_t OneWire::reset(void)
 //
 void OneWire::write_bit(uint8_t v)
 {
-	IO_REG_TYPE mask=bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+  IO_REG_TYPE mask=bitmask;
+  volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
 
-	if (v & 1) {
-		noInterrupts();
-		DIRECT_WRITE_LOW(reg, mask);
-		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-		delayMicroseconds(10);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
-		delayMicroseconds(55);
-	} else {
-		noInterrupts();
-		DIRECT_WRITE_LOW(reg, mask);
-		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
-		delayMicroseconds(65);
-		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
-		interrupts();
-		delayMicroseconds(5);
-	}
+  if (v & 1) {
+    noInterrupts();
+    DIRECT_WRITE_LOW(reg, mask);
+    DIRECT_MODE_OUTPUT(reg, mask);  // drive output low
+    delayMicroseconds(10);
+    DIRECT_WRITE_HIGH(reg, mask); // drive output high
+    interrupts();
+    delayMicroseconds(55);
+  } else {
+    noInterrupts();
+    DIRECT_WRITE_LOW(reg, mask);
+    DIRECT_MODE_OUTPUT(reg, mask);  // drive output low
+    delayMicroseconds(65);
+    DIRECT_WRITE_HIGH(reg, mask); // drive output high
+    interrupts();
+    delayMicroseconds(5);
+  }
 }
 
 //
@@ -203,20 +203,20 @@ void OneWire::write_bit(uint8_t v)
 //
 uint8_t OneWire::read_bit(void)
 {
-	IO_REG_TYPE mask=bitmask;
-	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
-	uint8_t r;
+  IO_REG_TYPE mask=bitmask;
+  volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
+  uint8_t r;
 
-	noInterrupts();
-	DIRECT_MODE_OUTPUT(reg, mask);
-	DIRECT_WRITE_LOW(reg, mask);
-	delayMicroseconds(3);
-	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
-	delayMicroseconds(10);
-	r = DIRECT_READ(reg, mask);
-	interrupts();
-	delayMicroseconds(53);
-	return r;
+  noInterrupts();
+  DIRECT_MODE_OUTPUT(reg, mask);
+  DIRECT_WRITE_LOW(reg, mask);
+  delayMicroseconds(3);
+  DIRECT_MODE_INPUT(reg, mask); // let pin float, pull up will raise
+  delayMicroseconds(10);
+  r = DIRECT_READ(reg, mask);
+  interrupts();
+  delayMicroseconds(53);
+  return r;
 }
 
 //
@@ -227,17 +227,17 @@ uint8_t OneWire::read_bit(void)
 // other mishap.
 //
 void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
-    uint8_t bitMask;
+  uint8_t bitMask;
 
-    for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-	OneWire::write_bit( (bitMask & v)?1:0);
-    }
-    if ( !power) {
-	noInterrupts();
-	DIRECT_MODE_INPUT(baseReg, bitmask);
-	DIRECT_WRITE_LOW(baseReg, bitmask);
-	interrupts();
-    }
+  for (bitMask = 0x01; bitMask; bitMask <<= 1) {
+    OneWire::write_bit( (bitMask & v)?1:0);
+  }
+  if ( !power) {
+    noInterrupts();
+    DIRECT_MODE_INPUT(baseReg, bitmask);
+    DIRECT_WRITE_LOW(baseReg, bitmask);
+    interrupts();
+  }
 }
 
 void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */) {
@@ -255,13 +255,13 @@ void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 
 // Read a byte
 //
 uint8_t OneWire::read() {
-    uint8_t bitMask;
-    uint8_t r = 0;
+  uint8_t bitMask;
+  uint8_t r = 0;
 
-    for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-	if ( OneWire::read_bit()) r |= bitMask;
-    }
-    return r;
+  for (bitMask = 0x01; bitMask; bitMask <<= 1) {
+    if ( OneWire::read_bit()) r |= bitMask;
+  }
+  return r;
 }
 
 void OneWire::read_bytes(uint8_t *buf, uint16_t count) {
@@ -286,14 +286,14 @@ void OneWire::select(const uint8_t rom[8])
 //
 void OneWire::skip()
 {
-    write(0xCC);           // Skip ROM
+  write(0xCC);           // Skip ROM
 }
 
 void OneWire::depower()
 {
-	noInterrupts();
-	DIRECT_MODE_INPUT(baseReg, bitmask);
-	interrupts();
+  noInterrupts();
+  DIRECT_MODE_INPUT(baseReg, bitmask);
+  interrupts();
 }
 
 #if ONEWIRE_SEARCH
@@ -504,12 +504,12 @@ static const uint8_t PROGMEM dscrc_table[] = {
 //
 uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
 {
-	uint8_t crc = 0;
+  uint8_t crc = 0;
 
-	while (len--) {
-		crc = pgm_read_byte(dscrc_table + (crc ^ *addr++));
-	}
-	return crc;
+  while (len--) {
+    crc = pgm_read_byte(dscrc_table + (crc ^ *addr++));
+  }
+  return crc;
 }
 #else
 //
@@ -518,22 +518,22 @@ uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
 //
 uint8_t OneWire::crc8(const uint8_t *addr, uint8_t len)
 {
-	uint8_t crc = 0;
+  uint8_t crc = 0;
 
-	while (len--) {
+  while (len--) {
 #if defined(__AVR__)
-		crc = _crc_ibutton_update(crc, *addr++);
+    crc = _crc_ibutton_update(crc, *addr++);
 #else
-		uint8_t inbyte = *addr++;
-		for (uint8_t i = 8; i; i--) {
-			uint8_t mix = (crc ^ inbyte) & 0x01;
-			crc >>= 1;
-			if (mix) crc ^= 0x8C;
-			inbyte >>= 1;
-		}
+    uint8_t inbyte = *addr++;
+    for (uint8_t i = 8; i; i--) {
+      uint8_t mix = (crc ^ inbyte) & 0x01;
+      crc >>= 1;
+      if (mix) crc ^= 0x8C;
+      inbyte >>= 1;
+    }
 #endif
-	}
-	return crc;
+  }
+  return crc;
 }
 #endif
 
